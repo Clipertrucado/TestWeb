@@ -1,0 +1,19 @@
+---
+import DashboardLayout from "../layouts/DashboardLayout.astro";
+import "../styles/global.css";
+import UserCard from "../components/user/UserCard.astro";
+import EncargosCard from "../components/Encargos/EncargosCard.astro";
+---
+
+<DashboardLayout>
+  <script is:inline>
+    if (!localStorage.getItem("token")) {
+      window.location.href = "/login";
+    }
+  </script>
+
+  <h2 class="mb-4 text-2xl font-semibold text-gray-700">Bienvenido al sistema</h2>
+
+  <UserCard />
+  <EncargosCard />
+</DashboardLayout>

@@ -1,0 +1,16 @@
+---
+import Navbar from "../components/UI/Navbar.astro";
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Panel Principal</title>
+  </head>
+  <body class="min-h-screen bg-gray-100">
+    <Navbar />
+    <main class="p-6">
+      <slot />
+    </main>
+  </body>
+</html>

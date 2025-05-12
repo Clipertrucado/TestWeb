@@ -1,0 +1,29 @@
+---
+---
+
+<div id="user-card" class="max-w-md p-6 mt-4 bg-white shadow-xl rounded-2xl">
+    <h2 class="mb-4 text-xl font-semibold text-gray-800">Datos del usuario</h2>
+    <p><strong>Nombre:</strong> <span id="name">Cargando...</span></p>
+    <p><strong>Email:</strong> <span id="email">Cargando...</span></p>
+    <p><strong>Rol:</strong> <span id="role">Cargando...</span></p>
+  
+    <script is:inline type="module">
+      import jwtDecode from 'https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.esm.js';
+  
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          document.getElementById('name').textContent = decoded.username || "Usuario";
+          document.getElementById('email').textContent = decoded.email || "No disponible";
+          document.getElementById('role').textContent = decoded.role_id ?? "desconocido";
+        } catch (e) {
+          console.error("Token inválido:", e);
+          document.getElementById('user-card').innerHTML = "<p class='text-red-500'>Token inválido</p>";
+        }
+      } else {
+        document.getElementById('user-card').innerHTML = "<p class='text-red-500'>Sesión no iniciada</p>";
+      }
+    </script>
+  </div>
+  
