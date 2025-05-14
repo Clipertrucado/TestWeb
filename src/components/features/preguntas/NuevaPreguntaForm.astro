@@ -1,0 +1,173 @@
+---
+---
+<div class="w-full p-8 bg-white shadow-xl rounded-2xl">
+    <h2 class="mb-6 text-2xl font-bold text-center text-gray-800">📝 Nueva pregunta</h2>
+  
+    <form id="preguntaForm" class="space-y-6">
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-700">Enunciado</label>
+        <textarea
+          name="enunciado"
+          placeholder="¿Cuál es la capital de Francia?"
+          class="w-full p-3 transition border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400"
+          required
+        />
+      </div>
+  
+      <div class="space-y-4">
+        <!-- A -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1">
+            <label class="block mb-1 text-sm font-medium text-gray-700">Opción A</label>
+            <input name="opcion1" type="text"
+              class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400"
+              required />
+          </div>
+          <input type="radio" name="respuesta_correcta" value="1" class="accent-red-500 mt-7" />
+        </div>
+  
+        <!-- B -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1">
+            <label class="block mb-1 text-sm font-medium text-gray-700">Opción B</label>
+            <input name="opcion2" type="text"
+              class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400"
+              required />
+          </div>
+          <input type="radio" name="respuesta_correcta" value="2" class="accent-red-500 mt-7" />
+        </div>
+  
+        <!-- C -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1">
+            <label class="block mb-1 text-sm font-medium text-gray-700">Opción C</label>
+            <input name="opcion3" type="text"
+              class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400"
+              required />
+          </div>
+          <input type="radio" name="respuesta_correcta" value="3" class="accent-red-500 mt-7" />
+        </div>
+  
+        <!-- D -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1">
+            <label class="block mb-1 text-sm font-medium text-gray-700">Opción D <span class="text-gray-400">(opcional)</span></label>
+            <input name="opcion4" type="text"
+              class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400" />
+          </div>
+          <input type="radio" name="respuesta_correcta" value="4" class="accent-red-500 mt-7" />
+        </div>
+      </div>
+  
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-700">Explicación <span class="text-gray-400">(opcional)</span></label>
+        <textarea name="explicacion" rows="3"
+          class="w-full p-3 border border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300"></textarea>
+      </div>
+  
+      <input type="hidden" name="id_encargo" id="id_encargo" />
+      <input type="hidden" name="modo_edicion" id="modo_edicion" />
+  
+      <button
+        type="submit"
+        class="block w-full py-3 font-semibold text-white transition bg-red-500 shadow-md hover:bg-red-600 rounded-xl">
+        💾 Guardar pregunta
+      </button>
+  
+      <p id="mensaje" class="mt-4 text-sm font-medium text-center"></p>
+    </form>
+  
+    <script is:inline>
+      const form = document.getElementById("preguntaForm");
+      const mensaje = document.getElementById("mensaje");
+      const letras = ["A", "B", "C", "D"];
+      const selectedEncargoId = localStorage.getItem("encargoSeleccionado");
+      document.getElementById("id_encargo").value = selectedEncargoId ?? "";
+  
+      const selectedPregunta = localStorage.getItem("preguntaSeleccionada");
+      if (selectedPregunta) {
+        const p = JSON.parse(selectedPregunta);
+        form.enunciado.value = p.enunciado_pregunta;
+        form.opcion1.value = p.opcion1_pregunta;
+        form.opcion2.value = p.opcion2_pregunta;
+        form.opcion3.value = p.opcion3_pregunta;
+        form.opcion4.value = p.opcion4_pregunta;
+        form.explicacion.value = p.explicacion_pregunta || "";
+        document.getElementById("modo_edicion").value = p.id_pregunta;
+        const indexCorrecta = letras.indexOf(p.respuesta_correcta_pregunta);
+        if (indexCorrecta !== -1) {
+          form.respuesta_correcta[indexCorrecta].checked = true;
+        }
+      }
+  
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+  
+        const radios = form.querySelectorAll("input[name='respuesta_correcta']");
+        const checked = Array.from(radios).find((r) => r.checked);
+        if (!checked) {
+          mensaje.textContent = "⚠️ Selecciona una respuesta correcta.";
+          mensaje.className = "text-red-500";
+          return;
+        }
+  
+        const index = parseInt(checked.value) - 1;
+        const opciones = [
+          form.opcion1.value.trim(),
+          form.opcion2.value.trim(),
+          form.opcion3.value.trim(),
+          form.opcion4.value.trim(),
+        ];
+  
+        if (!opciones[index]) {
+          mensaje.textContent = `⚠️ La opción ${letras[index]} está vacía. No puede ser la respuesta correcta.`;
+          mensaje.className = "text-red-500";
+          return;
+        }
+  
+        const data = {
+          enunciado_pregunta: form.enunciado.value,
+          opcion1_pregunta: opciones[0],
+          opcion2_pregunta: opciones[1],
+          opcion3_pregunta: opciones[2],
+          opcion4_pregunta: opciones[3],
+          respuesta_correcta_pregunta: letras[index],
+          explicacion_pregunta: form.explicacion.value,
+          id_encargo: parseInt(form.id_encargo.value),
+        };
+  
+        const modoEdicion = form.modo_edicion.value;
+        const url = modoEdicion
+          ? `http://localhost:4000/api/preguntas/${modoEdicion}`
+          : "http://localhost:4000/api/preguntas";
+  
+        const metodo = modoEdicion ? "PUT" : "POST";
+  
+        try {
+          const res = await fetch(url, {
+            method: metodo,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+  
+          const json = await res.json();
+  
+          if (res.ok) {
+            mensaje.textContent = modoEdicion
+              ? "✅ Pregunta actualizada correctamente"
+              : "✅ Pregunta creada correctamente";
+            mensaje.className = "text-green-600";
+            localStorage.removeItem("preguntaSeleccionada");
+            setTimeout(() => location.reload(), 800);
+          } else {
+            mensaje.textContent = json.message || "❌ Error al guardar";
+            mensaje.className = "text-red-500";
+          }
+        } catch (err) {
+          mensaje.textContent = "❌ Error de conexión con el servidor.";
+          mensaje.className = "text-red-500";
+        }
+      });
+    </script>
+  </div>
+  

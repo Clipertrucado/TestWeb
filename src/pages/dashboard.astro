@@ -1,8 +1,10 @@
 ---
-import DashboardLayout from "../layouts/DashboardLayout.astro";
-import "../styles/global.css";
-import UserCard from "../components/user/UserCard.astro";
-import EncargosCard from "../components/Encargos/EncargosCard.astro";
+import DashboardLayout from "@/components/layouts/DashboardLayout.astro";
+import "@/styles/global.css";
+import UserCard from "@/components/features/user/UserCard.astro";
+import EncargosCard from "@/components/features/encargos/EncargosCard.astro";
+import NuevaPreguntaForm from "@/components/features/preguntas/NuevaPreguntaForm.astro";
+import PreguntasCard from "@/components/features/preguntas/PreguntasCard.astro";
 ---
 
 <DashboardLayout>
@@ -12,8 +14,17 @@ import EncargosCard from "../components/Encargos/EncargosCard.astro";
     }
   </script>
 
-  <h2 class="mb-4 text-2xl font-semibold text-gray-700">Bienvenido al sistema</h2>
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-6">
+  <!-- Columna izquierda -->
+    <div class="space-y-6">
+      <UserCard />
+      <EncargosCard />
+    </div>
 
-  <UserCard />
-  <EncargosCard />
+    <!-- Columna central -->
+    <NuevaPreguntaForm />
+
+    <!-- Columna derecha -->
+    <PreguntasCard />
+  </div>
 </DashboardLayout>

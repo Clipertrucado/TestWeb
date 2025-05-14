@@ -1,0 +1,85 @@
+---
+---
+<div class="w-full p-6 bg-white rounded-2xl shadow-xl min-h-[400px]">
+  <h2 class="flex items-center justify-center gap-2 mb-4 text-xl font-bold text-center ">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+    Preguntas
+  </h2>
+
+  <div id="preguntas-list" class="space-y-4 text-gray-800"></div>
+
+  <script is:inline type="module">
+    const idEncargo = localStorage.getItem("encargoSeleccionado");
+    const lista = document.getElementById("preguntas-list");
+
+    if (!idEncargo) {
+      lista.innerHTML = "<p class='text-center text-gray-500'>Selecciona un encargo</p>";
+    } else {
+      fetch(`http://localhost:4000/api/preguntas/encargo/${idEncargo}`)
+        .then(res => res.json())
+        .then(preguntas => {
+          lista.innerHTML = "";
+
+          if (!preguntas.length) {
+            lista.innerHTML = "<p class='italic text-center text-gray-400'>Sin preguntas aún</p>";
+            return;
+          }
+
+          preguntas.forEach((p, index) => {
+            const container = document.createElement("div");
+            container.className = "relative bg-gray-50 p-4 rounded-xl shadow cursor-pointer hover:shadow-md transition group";
+
+            // Pregunta
+            const enunciado = document.createElement("p");
+            enunciado.className = "text-sm text-gray-700 max-w-[85%] break-words whitespace-pre-wrap";
+            enunciado.innerHTML = `<span class="mr-1 font-semibold">${index + 1}.</span> ${p.enunciado_pregunta}`;
+
+            // Menú desplegable (oculto por defecto)
+            const menu = document.createElement("div");
+            menu.className = "hidden absolute right-4 top-12 bg-white border border-gray-200 rounded-md shadow-md z-30 min-w-[120px] overflow-hidden";
+            menu.innerHTML = `
+              <button class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100">✏️ Editar</button>
+              <button class="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50">🗑️ Eliminar</button>
+            `;
+
+            // Acciones
+            menu.children[0].onclick = (e) => {
+              e.stopPropagation();
+              localStorage.setItem("preguntaSeleccionada", JSON.stringify(p));
+              location.reload();
+            };
+
+            menu.children[1].onclick = async (e) => {
+              e.stopPropagation();
+              const ok = confirm("¿Seguro que deseas eliminar esta pregunta?");
+              if (!ok) return;
+              await fetch(`http://localhost:4000/api/preguntas/${p.id_pregunta}`, { method: "DELETE" });
+              location.reload();
+            };
+
+            container.onclick = (e) => {
+              e.stopPropagation();
+              document.querySelectorAll(".menu-open").forEach(m => m.classList.add("hidden", "menu-open"));
+              menu.classList.toggle("hidden");
+              menu.classList.toggle("menu-open");
+              document.addEventListener("click", closeAllMenus, { once: true });
+            };
+
+            function closeAllMenus() {
+              menu.classList.add("hidden");
+              menu.classList.remove("menu-open");
+            }
+
+            container.appendChild(enunciado);
+            container.appendChild(menu);
+            lista.appendChild(container);
+          });
+        })
+        .catch(() => {
+          lista.innerHTML = "<p class='text-red-500'>Error al cargar preguntas</p>";
+        });
+    }
+  </script>
+</div>

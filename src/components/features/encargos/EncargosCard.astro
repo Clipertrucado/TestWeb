@@ -1,0 +1,100 @@
+---
+---
+<div class="max-w-md mt-6 overflow-hidden bg-white shadow-xl rounded-2xl">
+  <h2 class="flex items-center gap-2 px-6 pt-6 pb-2 text-2xl font-bold ">
+    Encargos
+  </h2>
+
+  <ul id="lista-encargos" class="px-6 pb-6 space-y-2 text-sm text-gray-800">
+    <li class="text-gray-500">Cargando encargos...</li>
+  </ul>
+
+  <script is:inline type="module">
+    import jwtDecode from 'https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.esm.js';
+
+    const userId = jwtDecode(localStorage.getItem("token"))?.id;
+    const lista = document.getElementById("lista-encargos");
+    const seleccionado = parseInt(localStorage.getItem("encargoSeleccionado") || "0");
+    const expanded = JSON.parse(localStorage.getItem("encargosExpandido") || "[]");
+
+    fetch(`http://localhost:4000/api/encargos/user/${userId}`)
+      .then(res => res.json())
+      .then(encargos => {
+        lista.innerHTML = "";
+
+        const padres = encargos.filter(e => e.encargo_padre_id === null);
+        const hijosMap = {};
+
+        encargos.forEach(e => {
+          if (e.encargo_padre_id) {
+            if (!hijosMap[e.encargo_padre_id]) hijosMap[e.encargo_padre_id] = [];
+            hijosMap[e.encargo_padre_id].push(e);
+          }
+        });
+
+        padres.forEach(padre => {
+          const li = document.createElement("li");
+
+          const isExpanded = expanded.includes(padre.id_encargo);
+
+          li.innerHTML = `
+            <div class="flex items-center justify-between px-4 py-2 rounded-lg shadow-sm cursor-pointer transition-all bg-gray-100 hover:bg-gray-200 ${padre.id_encargo === seleccionado ? 'border border-indigo-500 font-bold text-indigo-600' : ''}">
+              <span>${padre.nombre_encargo} (${padre.preguntas_actuales ?? 0} de ${padre.numero_preguntas_encargo})</span>
+              ${hijosMap[padre.id_encargo]
+                ? `<svg class="w-4 h-4 transition-transform transform ${isExpanded ? 'rotate-90' : ''}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                   </svg>`
+                : ''
+              }
+            </div>
+          `;
+
+          li.firstElementChild.onclick = () => {
+            if (!hijosMap[padre.id_encargo]) {
+              localStorage.setItem("encargoSeleccionado", padre.id_encargo);
+              localStorage.removeItem("preguntaSeleccionada");
+              location.reload();
+              return;
+            }
+            toggleExpand(padre.id_encargo);
+          };
+
+          if (isExpanded && hijosMap[padre.id_encargo]) {
+            const ulSub = document.createElement("ul");
+            ulSub.className = "pl-5 mt-1 border-l border-gray-300 space-y-1";
+
+            hijosMap[padre.id_encargo].forEach(hijo => {
+              const liHijo = document.createElement("li");
+              liHijo.className = `px-3 py-1 rounded-md cursor-pointer transition-colors hover:bg-gray-100 ${hijo.id_encargo === seleccionado ? 'text-indigo-600 font-medium' : ''}`;
+              liHijo.textContent = `${hijo.nombre_encargo} (${hijo.preguntas_actuales ?? 0} de ${hijo.numero_preguntas_encargo})`;
+              liHijo.onclick = () => {
+                localStorage.setItem("encargoSeleccionado", hijo.id_encargo);
+                localStorage.removeItem("preguntaSeleccionada");
+                location.reload();
+              };
+              ulSub.appendChild(liHijo);
+            });
+
+            li.appendChild(ulSub);
+          }
+
+          lista.appendChild(li);
+        });
+      })
+      .catch(err => {
+        console.error("Error al cargar encargos:", err);
+        lista.innerHTML = "<li class='text-red-500'>Error al cargar encargos</li>";
+      });
+
+    function toggleExpand(id) {
+      const index = expanded.indexOf(id);
+      if (index >= 0) {
+        expanded.splice(index, 1);
+      } else {
+        expanded.push(id);
+      }
+      localStorage.setItem("encargosExpandido", JSON.stringify(expanded));
+      location.reload();
+    }
+  </script>
+</div>
